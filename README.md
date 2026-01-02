@@ -1,167 +1,180 @@
 # Copilot Gateway
 
-Use your GitHub Copilot subscription as a local OpenAI-compatible HTTP API server.
+Expose GitHub Copilot as a **local OpenAI-compatible HTTP API** for agents, CLIs, and tools.
 
 ## Features
 
-- 🚀 **OpenAI-Compatible API**: Exposes `/v1/models` and `/v1/chat/completions` endpoints
-- 🔄 **SSE Streaming**: Full support for Server-Sent Events streaming responses
-- 🔐 **Optional Authentication**: Secure your API with Bearer token authentication
-- ⚡ **Request Queueing**: Built-in request queue with configurable concurrency limits
-- 🔁 **Retry Logic**: Automatic retry with exponential backoff for failed requests
-- 📊 **Dashboard**: Real-time statistics and configuration via webview UI
-- 📈 **Status Bar**: Quick server status indicator in VS Code
-- 🎯 **Production-Ready**: Built with TypeScript, proper error handling, and VS Code best practices
+- 🚀 **OpenAI-Compatible API**: Full `/v1/models` and `/v1/chat/completions` endpoints
+- 🔄 **SSE Streaming**: Server-Sent Events streaming for real-time responses
+- 🔐 **Bearer Authentication**: Optional token-based security
+- ⚡ **Request Queue**: Configurable concurrency and queue limits with 429 overflow handling
+- 🔁 **Smart Retry**: Exponential backoff with jitter for transient errors
+- 📊 **Dashboard**: Real-time statistics and configuration UI
+- 📈 **Usage Tracking**: Optional plan tracking with daily/weekly/monthly limits
+- 🎯 **Production-Ready**: TypeScript, proper error handling, VS Code best practices
 
 ## Installation
 
-1. Install the extension from the VS Code marketplace
-2. Make sure you have GitHub Copilot installed and activated
-3. The server will auto-start by default (configurable)
+1. Install from VS Code Marketplace (search: "Copilot Gateway")
+2. Ensure GitHub Copilot extension is installed and authenticated
+3. Server is OFF by default - start manually
 
-## Usage
+## Quick Start
 
 ### Starting the Server
 
-The server starts automatically when VS Code launches (if `autoStart` is enabled). You can also:
+1. Open Command Palette (`Cmd/Ctrl+Shift+P`)
+2. Run: `Gateway: Start`
+3. Server starts on `http://127.0.0.1:32123`
 
-- Use Command Palette: `Copilot Gateway: Start Gateway Server`
-- Click the status bar item and use the dashboard controls
-- Configure auto-start in settings
+Or click the status bar item and use the dashboard controls.
 
-### API Endpoints
-
-Once running, the following OpenAI-compatible endpoints are available:
-
-#### GET /v1/models
-
-List available Copilot models.
+### Basic Usage
 
 ```bash
-curl http://localhost:8080/v1/models
-```
+# List models
+curl http://127.0.0.1:32123/v1/models
 
-#### POST /v1/chat/completions
-
-Create a chat completion (supports streaming).
-
-**Non-streaming example:**
-```bash
-curl http://localhost:8080/v1/chat/completions \
+# Chat completion
+curl http://127.0.0.1:32123/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
     "model": "gpt-4",
     "messages": [{"role": "user", "content": "Hello!"}]
   }'
-```
 
-**Streaming example:**
-```bash
-curl http://localhost:8080/v1/chat/completions \
+# Streaming
+curl http://127.0.0.1:32123/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
     "model": "gpt-4",
-    "messages": [{"role": "user", "content": "Hello!"}],
+    "messages": [{"role": "user", "content": "Write a poem"}],
     "stream": true
   }'
 ```
 
-**With authentication:**
-```bash
-curl http://localhost:8080/v1/chat/completions \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_TOKEN_HERE" \
-  -d '{
-    "model": "gpt-4",
-    "messages": [{"role": "user", "content": "Hello!"}]
-  }'
-```
-
-### Dashboard
-
-Access the dashboard via:
-- Command Palette: `Copilot Gateway: Show Dashboard`
-- Click the status bar item
-
-The dashboard provides:
-- Real-time server statistics (requests, uptime, queue status)
-- Configuration management
-- Server controls (start/stop/restart)
-- API endpoint documentation
-
 ## Configuration
 
-All settings are available through VS Code settings or the dashboard:
+Access via VS Code Settings or Dashboard:
 
 | Setting | Default | Description |
 |---------|---------|-------------|
-| `copilot-gateway.port` | `8080` | HTTP server port (1024-65535) |
-| `copilot-gateway.authToken` | `""` | Bearer token for authentication (empty = disabled) |
-| `copilot-gateway.maxConcurrentRequests` | `5` | Maximum concurrent requests (1-50) |
-| `copilot-gateway.retryAttempts` | `3` | Maximum retry attempts for failed requests (0-10) |
-| `copilot-gateway.autoStart` | `true` | Auto-start server on extension activation |
+| `host` | `127.0.0.1` | Server bind address |
+| `port` | `32123` | HTTP server port |
+| `authToken` | `""` | Bearer token (empty = disabled) |
+| `maxConcurrent` | `1` | Max concurrent requests (1-4) |
+| `maxQueue` | `50` | Max queue size |
+| `maxRetries` | `6` | Retry attempts for transient errors |
+| `backoffBaseMs` | `400` | Base backoff delay |
+| `backoffMaxMs` | `15000` | Max backoff delay |
+| `backoffJitter` | `0.2` | Backoff jitter factor |
+| `plan.enabled` | `true` | Enable usage tracking |
+| `plan.period` | `daily` | Period: daily, weekly, monthly |
+| `plan.limitRequests` | `2000` | Request limit per period |
+| `plan.resetAt` | `00:00` | Period reset time (HH:MM) |
 
 ## Commands
 
-- `Copilot Gateway: Start Gateway Server` - Start the HTTP server
-- `Copilot Gateway: Stop Gateway Server` - Stop the HTTP server
-- `Copilot Gateway: Restart Gateway Server` - Restart the HTTP server
-- `Copilot Gateway: Show Dashboard` - Open the dashboard webview
+- `Gateway: Start` - Start the server
+- `Gateway: Stop` - Stop the server
+- `Gateway: Restart` - Restart the server
+- `Gateway: Toggle` - Toggle server on/off
+- `Gateway: Dashboard` - Open dashboard
+- `Gateway: Generate Token` - Generate & copy auth token
+- `Gateway: Copy Examples` - Copy cURL examples
 
-## Use Cases
+## Authentication
 
-- **Local Development**: Test OpenAI-compatible applications locally using your Copilot subscription
-- **API Compatibility**: Use tools and libraries designed for OpenAI API with Copilot
-- **Cost Savings**: Leverage your existing Copilot subscription instead of separate API costs
-- **Offline-First**: Use Copilot models through a local API when internet connectivity is limited
+Generate a secure token:
 
-## Requirements
+1. Run `Gateway: Generate Token` command
+2. Token is auto-copied to clipboard
+3. Add to requests: `Authorization: Bearer <token>`
 
-- VS Code version 1.85.0 or higher
-- Active GitHub Copilot subscription
-- GitHub Copilot extension installed and authenticated
+```bash
+curl http://127.0.0.1:32123/v1/chat/completions \
+  -H "Authorization: Bearer your_token_here" \
+  -H "Content-Type: application/json" \
+  -d '{"model": "gpt-4", "messages": [{"role": "user", "content": "Hi"}]}'
+```
+
+## Dashboard
+
+Open via Command Palette or status bar click.
+
+Features:
+- Real-time statistics
+- Queue and request metrics
+- Usage plan tracking
+- Configuration management
+- Server controls
+- API documentation
+
+## Usage Tracking
+
+The extension tracks Gateway usage (NOT official Copilot quota):
+
+- **Counters**: Total, success, failed, retries, stream, queue overflow, auth failures
+- **Latency**: EWMA and max
+- **Plan**: Optional period-based limits (visual/statistical only)
+
+**Note**: Usage tracking is a manual estimate, not official Copilot quota.
 
 ## Architecture
 
-The extension implements:
-
-1. **HTTP Server**: Built on Node.js `http` module with OpenAI-compatible endpoints
-2. **Request Queue**: FIFO queue with configurable concurrency limits
-3. **VS Code Language Model API**: Direct integration with `vscode.lm` API (vendor: "copilot")
-4. **Retry Mechanism**: Exponential backoff for transient failures
-5. **SSE Streaming**: Proper Server-Sent Events implementation for streaming responses
-6. **Status Management**: Real-time status updates via status bar and dashboard
-7. **Configuration**: Reactive configuration with VS Code settings API
+- **Server**: Node.js HTTP with 127.0.0.1 bind
+- **Queue**: FIFO with configurable concurrency (1-4) and max queue (50)
+- **Retry**: Exponential backoff with jitter for transient errors
+- **Models**: Via `vscode.lm` API (vendor: copilot)
+- **Messages**: System messages merged into first user message
+- **Streaming**: SSE starts after retry loop succeeds
+- **Cancellation**: Client disconnect detection via CancellationToken
 
 ## Security Notes
 
-- **Bearer Authentication**: Enable `authToken` setting to require authentication
-- **Local Only**: Server binds to localhost by default
-- **CORS Enabled**: Allows local cross-origin requests for development
-- **No Data Persistence**: No request/response data is stored
+- **Local Only**: Binds to localhost by default
+- **Bearer Auth**: Optional token authentication
+- **No Data Persistence**: Requests/responses not stored
+- **Token Security**: Tokens never logged
+
+## Requirements
+
+- VS Code 1.85.0 or higher
+- Active GitHub Copilot subscription
+- GitHub Copilot extension installed and authenticated
 
 ## Troubleshooting
 
 ### Port Already in Use
-Change the port in settings or stop the conflicting service.
+Change `copilot-gateway.port` in settings.
 
 ### Authentication Failures
-Verify your `authToken` matches the `Authorization: Bearer` header.
+Verify token matches `Authorization: Bearer` header.
 
 ### Copilot Model Not Available
-Ensure GitHub Copilot extension is installed, activated, and you're signed in.
+Ensure GitHub Copilot is installed, activated, and signed in.
 
 ### Request Timeouts
-Increase `retryAttempts` or reduce `maxConcurrentRequests` in settings.
+Increase `maxRetries` or check Copilot connection.
+
+### Queue Overflow (429)
+Increase `maxQueue` or reduce request rate.
+
+## Use Cases
+
+- **Local Development**: Test OpenAI apps with Copilot
+- **API Compatibility**: Use Copilot with OpenAI-compatible tools
+- **Cost Savings**: Leverage existing Copilot subscription
+- **Agent Integration**: Connect AI agents to Copilot
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) file for details.
+MIT License - see [LICENSE](LICENSE) file.
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit issues or pull requests.
+Contributions welcome! Please submit issues or pull requests.
 
-## Support
+## Repository
 
-For issues and feature requests, please use the [GitHub repository](https://github.com/tiroq/vscode-copilot-gateway).
+https://github.com/tiroq/vscode-copilot-gateway

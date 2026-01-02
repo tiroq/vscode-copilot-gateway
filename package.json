@@ -13,10 +13,13 @@
     "Other"
   ],
   "keywords": [
-    "copilot",
     "openai",
-    "api",
+    "copilot",
     "gateway",
+    "proxy",
+    "vscode",
+    "sse",
+    "api",
     "language-model"
   ],
   "activationEvents": [
@@ -27,31 +30,51 @@
     "commands": [
       {
         "command": "copilot-gateway.start",
-        "title": "Start Gateway Server",
+        "title": "Gateway: Start",
         "category": "Copilot Gateway"
       },
       {
         "command": "copilot-gateway.stop",
-        "title": "Stop Gateway Server",
+        "title": "Gateway: Stop",
         "category": "Copilot Gateway"
       },
       {
         "command": "copilot-gateway.restart",
-        "title": "Restart Gateway Server",
+        "title": "Gateway: Restart",
+        "category": "Copilot Gateway"
+      },
+      {
+        "command": "copilot-gateway.toggle",
+        "title": "Gateway: Toggle",
         "category": "Copilot Gateway"
       },
       {
         "command": "copilot-gateway.showDashboard",
-        "title": "Show Dashboard",
+        "title": "Gateway: Dashboard",
+        "category": "Copilot Gateway"
+      },
+      {
+        "command": "copilot-gateway.generateToken",
+        "title": "Gateway: Generate Token",
+        "category": "Copilot Gateway"
+      },
+      {
+        "command": "copilot-gateway.copyExamples",
+        "title": "Gateway: Copy Examples",
         "category": "Copilot Gateway"
       }
     ],
     "configuration": {
       "title": "Copilot Gateway",
       "properties": {
+        "copilot-gateway.host": {
+          "type": "string",
+          "default": "127.0.0.1",
+          "description": "Server bind address"
+        },
         "copilot-gateway.port": {
           "type": "number",
-          "default": 8080,
+          "default": 32123,
           "description": "HTTP server port",
           "minimum": 1024,
           "maximum": 65535
@@ -61,24 +84,77 @@
           "default": "",
           "description": "Optional Bearer authentication token (leave empty to disable auth)"
         },
-        "copilot-gateway.maxConcurrentRequests": {
+        "copilot-gateway.maxConcurrent": {
           "type": "number",
-          "default": 5,
+          "default": 1,
           "description": "Maximum number of concurrent requests",
           "minimum": 1,
-          "maximum": 50
+          "maximum": 4
         },
-        "copilot-gateway.retryAttempts": {
+        "copilot-gateway.maxQueue": {
           "type": "number",
-          "default": 3,
-          "description": "Maximum retry attempts for failed requests",
-          "minimum": 0,
-          "maximum": 10
+          "default": 50,
+          "description": "Maximum queue size",
+          "minimum": 1,
+          "maximum": 1000
         },
-        "copilot-gateway.autoStart": {
+        "copilot-gateway.maxRetries": {
+          "type": "number",
+          "default": 6,
+          "description": "Maximum retry attempts for transient errors",
+          "minimum": 0,
+          "maximum": 20
+        },
+        "copilot-gateway.backoffBaseMs": {
+          "type": "number",
+          "default": 400,
+          "description": "Base backoff delay in milliseconds",
+          "minimum": 100,
+          "maximum": 5000
+        },
+        "copilot-gateway.backoffMaxMs": {
+          "type": "number",
+          "default": 15000,
+          "description": "Maximum backoff delay in milliseconds",
+          "minimum": 1000,
+          "maximum": 60000
+        },
+        "copilot-gateway.backoffJitter": {
+          "type": "number",
+          "default": 0.2,
+          "description": "Backoff jitter factor (0-1)",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "copilot-gateway.plan.enabled": {
           "type": "boolean",
           "default": true,
-          "description": "Automatically start server on extension activation"
+          "description": "Enable usage plan tracking"
+        },
+        "copilot-gateway.plan.period": {
+          "type": "string",
+          "default": "daily",
+          "enum": ["daily", "weekly", "monthly"],
+          "description": "Plan period for usage tracking"
+        },
+        "copilot-gateway.plan.limitRequests": {
+          "type": "number",
+          "default": 2000,
+          "description": "Request limit per period",
+          "minimum": 1,
+          "maximum": 100000
+        },
+        "copilot-gateway.plan.resetAt": {
+          "type": "string",
+          "default": "00:00",
+          "description": "Period reset time in HH:MM format",
+          "pattern": "^([0-1][0-9]|2[0-3]):[0-5][0-9]$"
+        },
+        "copilot-gateway.plan.offLimitMode": {
+          "type": "string",
+          "default": "soft",
+          "enum": ["soft", "hard"],
+          "description": "Off-limit mode (soft = warn, hard = block)"
         }
       }
     }
