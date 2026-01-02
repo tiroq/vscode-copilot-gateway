@@ -7,6 +7,19 @@ interface DashboardData {
     planStats: any;
 }
 
+// HTML escape utility
+function escapeHtml(text: string | number): string {
+    const str = String(text);
+    const map: Record<string, string> = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+    };
+    return str.replace(/[&<>"']/g, (char) => map[char]);
+}
+
 export function getDashboardHtml(data: DashboardData): string {
     const { config, isRunning, stats, planStats } = data;
     
@@ -89,24 +102,24 @@ export function getDashboardHtml(data: DashboardData): string {
     <div class="info-box"><strong>Note:</strong> This tracks Gateway usage only, NOT official Copilot quota.</div>` : ''}
     
     <h2>Configuration</h2>
-    <div class="config-item"><label class="config-label">Host</label><input type="text" value="${config.host}" onchange="updateConfig('host', this.value)"></div>
-    <div class="config-item"><label class="config-label">Port</label><input type="number" value="${config.port}" min="1024" max="65535" onchange="updateConfig('port', parseInt(this.value))"></div>
-    <div class="config-item"><label class="config-label">Auth Token</label><input type="text" value="${config.authToken}" onchange="updateConfig('authToken', this.value)" placeholder="Leave empty to disable">
+    <div class="config-item"><label class="config-label">Host</label><input type="text" value="${escapeHtml(config.host)}" onchange="updateConfig('host', this.value)"></div>
+    <div class="config-item"><label class="config-label">Port</label><input type="number" value="${escapeHtml(config.port)}" min="1024" max="65535" onchange="updateConfig('port', parseInt(this.value))"></div>
+    <div class="config-item"><label class="config-label">Auth Token</label><input type="text" value="${escapeHtml(config.authToken)}" onchange="updateConfig('authToken', this.value)" placeholder="Leave empty to disable">
     <div><button onclick="generateToken()">Generate</button><button onclick="copyToken()">Copy</button></div></div>
-    <div class="config-item"><label class="config-label">Max Concurrent (1-4)</label><input type="number" value="${config.maxConcurrent}" min="1" max="4" onchange="updateConfig('maxConcurrent', parseInt(this.value))"></div>
-    <div class="config-item"><label class="config-label">Max Queue</label><input type="number" value="${config.maxQueue}" min="1" onchange="updateConfig('maxQueue', parseInt(this.value))"></div>
-    <div class="config-item"><label class="config-label">Max Retries</label><input type="number" value="${config.maxRetries}" min="0" onchange="updateConfig('maxRetries', parseInt(this.value))"></div>
+    <div class="config-item"><label class="config-label">Max Concurrent (1-4)</label><input type="number" value="${escapeHtml(config.maxConcurrent)}" min="1" max="4" onchange="updateConfig('maxConcurrent', parseInt(this.value))"></div>
+    <div class="config-item"><label class="config-label">Max Queue</label><input type="number" value="${escapeHtml(config.maxQueue)}" min="1" onchange="updateConfig('maxQueue', parseInt(this.value))"></div>
+    <div class="config-item"><label class="config-label">Max Retries</label><input type="number" value="${escapeHtml(config.maxRetries)}" min="0" onchange="updateConfig('maxRetries', parseInt(this.value))"></div>
     <div class="config-item"><label class="config-label">Plan Enabled</label><input type="checkbox" ${config.planEnabled ? 'checked' : ''} onchange="updateConfig('plan.enabled', this.checked)"></div>
     <div class="config-item"><label class="config-label">Plan Period</label><select onchange="updateConfig('plan.period', this.value)">
         <option value="daily" ${config.planPeriod === 'daily' ? 'selected' : ''}>Daily</option>
         <option value="weekly" ${config.planPeriod === 'weekly' ? 'selected' : ''}>Weekly</option>
         <option value="monthly" ${config.planPeriod === 'monthly' ? 'selected' : ''}>Monthly</option>
     </select></div>
-    <div class="config-item"><label class="config-label">Plan Limit</label><input type="number" value="${config.planLimitRequests}" onchange="updateConfig('plan.limitRequests', parseInt(this.value))"></div>
+    <div class="config-item"><label class="config-label">Plan Limit</label><input type="number" value="${escapeHtml(config.planLimitRequests)}" onchange="updateConfig('plan.limitRequests', parseInt(this.value))"></div>
     
     <h2>API</h2>
     <div class="info-box">
-        <strong>Base:</strong> <code>http://${config.host}:${config.port}</code><br>
+        <strong>Base:</strong> <code>http://${escapeHtml(config.host)}:${escapeHtml(config.port)}</code><br>
         <code>GET /v1/models</code> | <code>POST /v1/chat/completions</code><br>
         ${config.authToken ? `<strong>Auth:</strong> <code>Bearer ...</code>` : 'Auth: Disabled'}
     </div>

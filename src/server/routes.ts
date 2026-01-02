@@ -19,6 +19,11 @@ interface ChatCompletionRequest {
     stream?: boolean;
 }
 
+// Helper function to get stable model ID
+function getModelId(model: vscode.LanguageModelChat): string {
+    return model.id || model.name;
+}
+
 export class RoutesHandler {
     constructor(
         private statsManager: StatsManager,
@@ -36,7 +41,7 @@ export class RoutesHandler {
             const response = {
                 object: 'list',
                 data: models.map(model => ({
-                    id: model.id || model.name,
+                    id: getModelId(model),
                     object: 'model',
                     owned_by: 'copilot-via-vscode'
                 }))
@@ -194,7 +199,7 @@ export class RoutesHandler {
         });
         
         let chunkIndex = 0;
-        const modelId = model.id || model.name;
+        const modelId = getModelId(model);
         
         try {
             for await (const fragment of chatResponse.text) {
@@ -271,7 +276,7 @@ export class RoutesHandler {
             fullText += fragment;
         }
         
-        const modelId = model.id || model.name;
+        const modelId = getModelId(model);
         
         const response = {
             id: `chatcmpl-${Date.now()}`,

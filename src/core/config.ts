@@ -1,5 +1,8 @@
 import * as vscode from 'vscode';
 
+export type PlanPeriod = 'daily' | 'weekly' | 'monthly';
+export type OffLimitMode = 'soft' | 'hard';
+
 export interface GatewayConfig {
     // Server settings
     host: string;
@@ -18,10 +21,10 @@ export interface GatewayConfig {
     
     // Plan settings
     planEnabled: boolean;
-    planPeriod: 'daily' | 'weekly' | 'monthly';
+    planPeriod: PlanPeriod;
     planLimitRequests: number;
     planResetAt: string;
-    planOffLimitMode: 'soft' | 'hard';
+    planOffLimitMode: OffLimitMode;
 }
 
 export class ConfigManager {
@@ -41,10 +44,10 @@ export class ConfigManager {
             backoffMaxMs: config.get<number>('backoffMaxMs', 15000),
             backoffJitter: config.get<number>('backoffJitter', 0.2),
             planEnabled: config.get<boolean>('plan.enabled', true),
-            planPeriod: config.get<'daily' | 'weekly' | 'monthly'>('plan.period', 'daily'),
+            planPeriod: config.get<PlanPeriod>('plan.period', 'daily'),
             planLimitRequests: config.get<number>('plan.limitRequests', 2000),
             planResetAt: config.get<string>('plan.resetAt', '00:00'),
-            planOffLimitMode: config.get<'soft' | 'hard'>('plan.offLimitMode', 'soft')
+            planOffLimitMode: config.get<OffLimitMode>('plan.offLimitMode', 'soft')
         };
     }
     

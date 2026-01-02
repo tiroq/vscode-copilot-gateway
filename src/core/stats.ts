@@ -25,6 +25,8 @@ export class StatsManager {
     private stats: GatewayStats;
     private context: vscode.ExtensionContext;
     private readonly EWMA_ALPHA = 0.2; // Weight for EWMA calculation
+    private saveTimeout: NodeJS.Timeout | undefined;
+    private readonly SAVE_DELAY_MS = 1000; // Batch saves every 1 second
     
     constructor(context: vscode.ExtensionContext) {
         this.context = context;
@@ -50,6 +52,15 @@ export class StatsManager {
         };
     }
     
+    private scheduleSave(): void {
+        if (this.saveTimeout) {
+            clearTimeout(this.saveTimeout);
+        }
+        this.saveTimeout = setTimeout(() => {
+            this.saveStats();
+        }, this.SAVE_DELAY_MS);
+    }
+    
     private async saveStats(): Promise<void> {
         await this.context.globalState.update('gatewayStats', this.stats);
     }
@@ -60,37 +71,37 @@ export class StatsManager {
     
     public incrementRequestTotal(): void {
         this.stats.gateway_requests_total++;
-        this.saveStats();
+        this.scheduleSave();
     }
     
     public incrementSuccess(): void {
         this.stats.gateway_requests_success++;
-        this.saveStats();
+        this.scheduleSave();
     }
     
     public incrementFailed(): void {
         this.stats.gateway_requests_failed++;
-        this.saveStats();
+        this.scheduleSave();
     }
     
     public incrementRetries(): void {
         this.stats.gateway_retries_total++;
-        this.saveStats();
+        this.scheduleSave();
     }
     
     public incrementStreamRequests(): void {
         this.stats.gateway_stream_requests_total++;
-        this.saveStats();
+        this.scheduleSave();
     }
     
     public incrementQueueOverflow(): void {
         this.stats.gateway_queue_overflow_total++;
-        this.saveStats();
+        this.scheduleSave();
     }
     
     public incrementAuthFail(): void {
         this.stats.gateway_auth_fail_total++;
-        this.saveStats();
+        this.scheduleSave();
     }
     
     public recordLatency(latencyMs: number): void {
@@ -106,7 +117,7 @@ export class StatsManager {
             this.stats.latency_max = latencyMs;
         }
         
-        this.saveStats();
+        this.scheduleSave();
     }
     
     public setActiveRequests(count: number): void {

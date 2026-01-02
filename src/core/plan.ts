@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { ConfigManager } from './config';
+import { ConfigManager, PlanPeriod } from './config';
 
 export interface PlanStats {
     period: string;
@@ -17,7 +17,7 @@ export class PlanManager {
         this.context = context;
     }
     
-    private getPeriodKey(date: Date, period: 'daily' | 'weekly' | 'monthly', resetAt: string): string {
+    private getPeriodKey(date: Date, period: PlanPeriod, resetAt: string): string {
         // Parse resetAt (HH:MM format)
         const [resetHour, resetMinute] = resetAt.split(':').map(Number);
         
